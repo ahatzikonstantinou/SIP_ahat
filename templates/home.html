@@ -227,7 +227,12 @@ $code:
                     alert($:{json.dumps(_('Timer values wrong: '), ensure_ascii=False)} + strmm + ":" + strss);
                     return;
                 }
-                window.location = "/sn?sid=" + (sid+1) + "&set_to=1" + "&set_time=" + (mm*60+ss);  // turn it off with timer
+                //window.location = "/sn?sid=" + (sid+1) + "&set_to=1" + "&set_time=" + (mm*60+ss);  // turn it off with timer
+                $$.get("/sn", { sid: sid + 1, set_to: sbit ? 0 : 1, set_time: mm * 60 + ss }, function(response) {
+                    // After backend updates, reload or update DOM manually
+                    location.reload(); // or update master status dynamically
+                });
+
             }
         });
 
@@ -287,6 +292,16 @@ $code:
 $if gv.sd['mm']:
     <div id="manualmode">
         <table id="stations" class="stationList">
+            <script>
+                // Convert Python lists to JSON and assign to JS variables
+                const srvals = ${json.dumps(gv.srvals)};
+                const masterStations = ${json.dumps(gv.sd['mas'])};
+
+                // Optional: log them to console for inspection
+                console.log("Shift register values:", srvals);
+                console.log("Master stations:", masterStations);
+            </script>
+
         $# Manual program control formatting
         $for bid in range(0, gv.sd['nbrd']):
             $for s in range(0,8):
@@ -294,12 +309,12 @@ $if gv.sd['mm']:
                 $ sbit = (gv.sbits[bid]>>s)&1
                 $ show = (gv.sd['show'][bid]>>s)&1
                 $ revals = gv.srvals
-                $revals.reverse()
+                $# revals.reverse()
                 
                 $if show == 1:
                     <tr>
                         <td class='station_name'>${snames[sid]}</td>
-                        $if sid + 1 == gv.sd['mas']:
+                        $if (sid + 1) in gv.sd['mas']:
                             $if revals[sid]:
                                 <td class="master station_on">$_('On (Master)')</td>
                             $else:

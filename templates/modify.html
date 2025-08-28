@@ -449,7 +449,7 @@ let cycleTime = ${two_digits(program['cycle_min'] % 60)};
                         $ sid = bid*8 + s;
                         $ sn = sid + 1
                         $ show = (gv.sd[u"show"][bid]>>s)&1
-                        $if show == 1 and sn != gv.sd[u"mas"]:
+                        $if show == 1 and (sn not in gv.sd[u"mas"]):
                             $ stationEnabled = program['station_mask'][bid]&(1<<s)
                                       
                             <tr>

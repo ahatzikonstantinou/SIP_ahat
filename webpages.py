@@ -278,7 +278,14 @@ class change_options(ProtectedPage):
                 qdict["rstrt"] = "1"  # force restart with change in htip
             gv.sd["htip"] = qdict["ohtip"]
 
-        for f in ["sdt","mas", "mton", "mtoff", "wl", "lr", "tz"]:
+        # Save 'mas' as a list of station indexes
+        if "omas" in qdict:
+            try:
+                gv.sd["mas"] = json.loads(qdict["omas"])  # assuming it's passed as a JSON string
+            except Exception:
+                gv.sd["mas"] = []  # fallback to empty list if parsing fails
+
+        for f in ["sdt", "mton", "mtoff", "wl", "lr", "tz"]:
             if (f in ["sdt", "mton", "mtoff"] and qdict["o" + f] == ""):
                 qdict["o" + f] = 0
             elif (f in ["wl", "lr"] and qdict["o" + f] == ""):
@@ -452,16 +459,22 @@ class get_set_station(ProtectedPage):
                 if gv.sd["seq"]:
                     if gv.sd["mas"] and snmo: # if a master is set
                         for i in range(gv.sd["nst"]):  # clear running stations
-                            if i != gv.sd["mas"] - 1:  # if not mster
+                            # if i != gv.sd["mas"] - 1:  # if not mster
+                            if (i + 1) not in gv.sd["mas"]:  # if not mster
                                 gv.srvals[i] = 0
                                 gv.rs[i] = [0, 0, 0, 0]
                                 gv.ps[i] = [0, 0]
                         set_output()
-                        sb_byte = (gv.sd["mas"] - 1) // 8
-                        gv.sbits[sb_byte] = 1 << (gv.sd["mas"] - 1) % 8
-                        for b in range(len(gv.sbits)):
-                            if b != sb_byte:
-                                gv.sbits[b] = 0
+                        # sb_byte = (gv.sd["mas"] - 1) // 8
+                        # gv.sbits[sb_byte] = 1 << (gv.sd["mas"] - 1) % 8
+                        # for b in range(len(gv.sbits)):
+                        #     if b != sb_byte:
+                        #         gv.sbits[b] = 0                        
+                        gv.sbits = [0] * len(gv.sbits)  # Clear all sbits first
+                        # Set bits for all master stations
+                        for m in gv.sd["mas"]:
+                            sb_byte = (m - 1) // 8
+                            gv.sbits[sb_byte] |= 1 << ((m - 1) % 8)
                     else:
                       stop_stations()
                 gv.rs[sid][0] = gv.now  # set start time to current time
@@ -479,7 +492,9 @@ class get_set_station(ProtectedPage):
             else:  # If station is turning off
                 gv.rs[sid][1] = gv.now + 1
                 if gv.sd["mas"]:
-                    gv.rs[gv.sd["mas"] - 1][1] = gv.now + 1
+                    # gv.rs[gv.sd["mas"] - 1][1] = gv.now + 1
+                    for m in gv.sd["mas"]:
+                        gv.rs[m - 1][1] = gv.now + 1
                 time.sleep(1)
             raise web.seeother("/")
         else:
@@ -679,7 +694,8 @@ class api_status(ProtectedPage):
                                 status["reason"] = "rain_delay"
                             if gv.sd["urs"] != 0 and gv.sd["rs"] != 0:
                                 status["reason"] = "rain_sensed"
-                        if sn == gv.sd["mas"]:
+                        # if sn == gv.sd["mas"]:
+                        if sn in gv.sd["mas"]:
                             status["master"] = 1
                             status["reason"] = "master"
                         else:

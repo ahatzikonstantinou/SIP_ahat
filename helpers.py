@@ -562,7 +562,8 @@ def stop_stations():
     # log data for halted station
     i = 0
     while i < len(prev_srvals):
-        if i == gv.sd["mas"] -1:  # skip master:
+        # if i == gv.sd["mas"] -1:  # skip master:
+        if (i + 1) not in gv.sd["mas"]:  # skip master:
             i += 1
             continue
         if prev_srvals[i]:
@@ -622,7 +623,8 @@ def run_program(pid):
     for b in range(gv.sd["nbrd"]):  # check each station
         for s in range(8):
             sid = b * 8 + s  # station index
-            if sid + 1 == gv.sd["mas"]:
+            # if sid + 1 == gv.sd["mas"]:
+            if (sid + 1) not in gv.sd["mas"]: 
                 continue  # skip if this is master valve
             if (
                 p["station_mask"][b] & 1 << s

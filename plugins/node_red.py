@@ -393,7 +393,7 @@ def station_on_off(data):
     elif "station" in data:
         station = data["station"]
     state = data["set"]
-    masid = gv.sd["mas"] - 1
+    # masid = gv.sd["mas"] - 1
     if "preempt" in data:
         pre = data["preempt"]
     else:
@@ -470,14 +470,14 @@ def send_zone_change(name, **kw):
                 and True  # Send station on/off: option ####
             ):  #  this station has changed
                 if not gv.srvals[i]:  # station is off
-                    if gv.sd["mas"] and gv.sd["mas"] == i + 1:
+                    if gv.sd["mas"] and i + 1 in gv.sd["mas"] :
                         name = "master"
                     else:
                         name = gv.snames[i]
                     msg = {"station": i + 1, "name": name, "state": 0}
                     to_node_red(msg)
                 else:
-                    if gv.sd["mas"] and gv.sd["mas"] == i + 1:
+                    if gv.sd["mas"] and i + 1 in gv.sd["mas"]:
                         name = "master"
                     else:
                         name = gv.snames[i]

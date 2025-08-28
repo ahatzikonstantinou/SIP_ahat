@@ -46,21 +46,28 @@ $code:
 //            tq = (tq/15>>0)/4.0;
 //            th = th+(th>=0?tq:-tq);
 //            jQuery("input[name='otz']").val(((th+12)*4)>>0);
-            var masterButton = jQuery("td.stationMaster input[type='radio']:checked");
-            if (masterButton.length == 0) {
-                mas = 0;
-            } else {
-                mas = parseInt(masterButton[0].id.split("s")[1]) + 1;
-            }
-            jQuery("#omas").val(mas);
-            if (mas>0) {
+            // var masterButton = jQuery("td.stationMaster input[type='radio']:checked");
+            // if (masterButton.length == 0) {
+            //     mas = 0;
+            // } else {
+            //     mas = parseInt(masterButton[0].id.split("s")[1]) + 1;
+            // }
+            // jQuery("#omas").val(mas);
+            var mas = [];
+            jQuery("td.stationMaster input[type='checkbox']:checked").each(function() {
+                mas.push(parseInt(jQuery(this).val()));
+            });
+            jQuery("#omas").val(JSON.stringify(mas)); // Store as JSON string if needed server-side
+
+            if (mas.length>0) {
                 var s, bid, sid, vm;
                 for (bid=0; bid<nbrd; bid++) {
                     vm = 0;
                     for (s=0; s<8; s++) {
                         sid = bid*8 + (7-s);
                         vm = vm<<1;
-                        if (sid == mas-1) {
+                        // if (sid == mas-1) {
+                        if (mas.includes(sid + 1)) {
                             vm = vm + 1;
                             continue;
                         }
@@ -81,10 +88,11 @@ $code:
                     vi = vi<<1;
                     vs = vs<<1;
                     vw = vw<<1;
-                    if (sid == mas-1) {
-                        vi = vi + 1;
+                    // if (sid == mas-1) {
+                    if (mas.includes(sid + 1)) {
+                        // vi = vi + 1;
                         vs = vs + 1;
-                        vw = vw + 1;
+                        // vw = vw + 1;
                         continue;
                     }
                     if (jQuery("#rc"+sid).is(":checked")) {
@@ -146,9 +154,11 @@ $code:
 
         jQuery("button#cClearMaster").click(function(){
             // Clear all "master" radio buttons
-            var previousSelection = jQuery("#stationOpts input[type='radio']:checked");
+            // var previousSelection = jQuery("#stationOpts input[type='radio']:checked");
+            var previousSelection = jQuery("td.stationMaster input[type='checkbox']:checked");
             previousSelection.prop("checked",false);
             previousSelection.closest("tr").find("input[type='checkbox']").prop("disabled", false);
+
             // Disable all "enable master" checkboxes
             jQuery("td.stationMasterEnabled input[type='checkbox']").prop("disabled", true);
             // Disable the now unnecessary "clear master" button
@@ -156,28 +166,53 @@ $code:
             return false; //Prevent event propagation (e.g. cancel/save)
         });
 
-        jQuery("#stationOpts input[type='radio']").on('change',function() {
-            // Enable all "enable master" checkboxes (do this before disabling the specific row), omiting disabled stations
+        // jQuery("#stationOpts input[type='radio']").on('change',function() {
+        //     // Enable all "enable master" checkboxes (do this before disabling the specific row), omiting disabled stations
+        //     jQuery("td.stationMasterEnabled input[type='checkbox']").each(function() {
+        //         var enabled = jQuery(this).closest("tr").find("td.stationShow input[type='checkbox']:checked").length == 1;
+        //         jQuery(this).prop("disabled", !enabled );
+        //     });
+        //     // Disable all other controls on this station when it's in master mode
+        //     jQuery(this).closest("tr").find("input[type='checkbox']").prop("disabled", true);
+        //     // Clear the previous value of the button
+        //     var previousSelection = jQuery("#stationOpts input[type='radio']:checked").not(this);
+        //     if (previousSelection != undefined) {
+        //         previousSelection.prop('checked',false);
+        //         var stationNumber = previousSelection.val();
+        //         previousSelection.closest("tr").find("input[type='checkbox']").prop("disabled", false);
+        //     }
+        //     // Make sure the "clear master" button is enabled
+        //     jQuery("button#cClearMaster").prop("disabled", false);
+        // });
+
+        jQuery("td.stationMaster input[type='checkbox']").on('change', function() {
+            var $$row = jQuery(this).closest("tr");
+
+            if (jQuery(this).is(":checked")) {
+                // Only check the "show" checkbox in this row
+                $$row.find("td.stationShow input[type='checkbox']").prop("checked", true);
+            }
+
+            // Refresh master-enabled checkboxes globally
             jQuery("td.stationMasterEnabled input[type='checkbox']").each(function() {
                 var enabled = jQuery(this).closest("tr").find("td.stationShow input[type='checkbox']:checked").length == 1;
-                jQuery(this).prop("disabled", !enabled );
+                jQuery(this).prop("disabled", !enabled);
             });
-            // Disable all other controls on this station when it's in master mode
-            jQuery(this).closest("tr").find("input[type='checkbox']").prop("disabled", true);
-            // Clear the previous value of the button
-            var previousSelection = jQuery("#stationOpts input[type='radio']:checked").not(this);
-            if (previousSelection != undefined) {
-                previousSelection.prop('checked',false);
-                var stationNumber = previousSelection.val();
-                previousSelection.closest("tr").find("input[type='checkbox']").prop("disabled", false);
-            }
-            // Make sure the "clear master" button is enabled
-            jQuery("button#cClearMaster").prop("disabled", false);
+
+            // Enable or disable other controls in the row based on master status
+            $$row.find("input[type='checkbox']").prop("disabled", jQuery(this).is(":checked"));
+            jQuery(this).prop("disabled", false); // Keep master checkbox enabled
+
+            // Enable Clear Master button if any master is selected
+            var anyMasters = jQuery("td.stationMaster input[type='checkbox']:checked").length > 0;
+            jQuery("button#cClearMaster").prop("disabled", !anyMasters);
         });
 
-        jQuery("#stationOpts input[type='radio']").click(function() {
-            var newMaster = jQuery(this).val();
-        });
+
+
+        // jQuery("#stationOpts input[type='radio']").click(function() {
+        //     var newMaster = jQuery(this).val();
+        // });
         jQuery("td.stationShow input[type='checkbox']").click(function() {
             var newEnabled = jQuery(this).prop('checked');
             jQuery(this).closest("tr").find("td.stationMaster input[type='radio']").prop("disabled", !newEnabled);
@@ -235,30 +270,30 @@ $code:
                         output += "</td>\n"
 
                         output += "<td class='stationShow'>\n"
-                        output += "<label class='notSelectable'>&nbsp;<input type='checkbox' " + ("checked" if gv.sd['show'][bid]&(1<<s) else "") + (" disabled" if gv.sd['mas']==sid+1 else "") + " id='show" + str(sid) + "'>&nbsp;</label>\n"
+                        output += "<label class='notSelectable'>&nbsp;<input type='checkbox' " + ("checked" if gv.sd['show'][bid]&(1<<s) else "") + (" disabled" if (sid + 1) in gv.sd['mas'] else "") + " id='show" + str(sid) + "'>&nbsp;</label>\n"
                         output += "</td>\n"
 
                         output += "<td class='stationMaster'>\n"
-                        output += "<label class='notSelectable'>&nbsp;<input type='radio' " + ("checked" if (sid == gv.sd['mas'] - 1) else "") + ("" if gv.sd['show'][bid]&(1<<s) else " disabled") + " id='mas" + str(sid) + "' value='" + str(sid + 1) + "'>&nbsp;</label>\n"
+                        output += "<label class='notSelectable'>&nbsp;<input type='checkbox' " + ("checked" if ((sid + 1) in gv.sd['mas']) else "") + ("" if gv.sd['show'][bid]&(1<<s) else " disabled") + " id='mas" + str(sid) + "' value='" + str(sid + 1) + "'>&nbsp;</label>\n"
                         output += "</td>\n"
                             
                         output += "<td class='stationIgnore'>\n"
-                        output += "<label class='notSelectable'>&nbsp;<input type='checkbox' " + ("checked" if gv.sd['ir'][bid]&(1<<s) else "") + ("" if gv.sd['show'][bid]&(1<<s) else " disabled") + (" disabled" if gv.sd['mas']==sid+1 else "") + " id='rc" + str(sid) + "'>&nbsp;</label>\n"
+                        output += "<label class='notSelectable'>&nbsp;<input type='checkbox' " + ("checked" if gv.sd['ir'][bid]&(1<<s) else "") + ("" if gv.sd['show'][bid]&(1<<s) else " disabled") + (" disabled" if (sid + 1) in gv.sd['mas'] else "") + " id='rc" + str(sid) + "'>&nbsp;</label>\n"
                         output += "</td>\n"
 
                         output += "<td class='stationIgnoreML'>\n"
-                        output += "<label class='notSelectable'>&nbsp;<input type='checkbox' " + ("checked" if gv.sd['iw'][bid]&(1<<s) else "") + ("" if gv.sd['show'][bid]&(1<<s) else " disabled") + (" disabled" if gv.sd['mas']==sid+1 else "") + " id='wlc" + str(sid) + "'>&nbsp;</label>\n"
+                        output += "<label class='notSelectable'>&nbsp;<input type='checkbox' " + ("checked" if gv.sd['iw'][bid]&(1<<s) else "") + ("" if gv.sd['show'][bid]&(1<<s) else " disabled") + (" disabled" if (sid + 1) in gv.sd['mas'] else "") + " id='wlc" + str(sid) + "'>&nbsp;</label>\n"
                         output += "</td>\n"
 
                         output += "<td class='stationMasterEnabled'>\n"
-                        output += "<label class='notSelectable'>&nbsp;<input type='checkbox' " + ("checked" if gv.sd['mo'][bid]&(1<<s) else "") + (" disabled" if gv.sd['mas']==0 or gv.sd['mas']==sid+1 or not(gv.sd['show'][bid]&(1<<s)) else "") + " id='mc" + str(sid) + "'>&nbsp;</label>\n"
+                        output += "<label class='notSelectable'>&nbsp;<input type='checkbox' " + ("checked" if gv.sd['mo'][bid]&(1<<s) else "") + (" disabled" if not gv.sd['mas'] or ((sid + 1) in gv.sd['mas']) or not(gv.sd['show'][bid]&(1<<s)) else "") + " id='mc" + str(sid) + "'>&nbsp;</label>\n"
                         output += "</td>\n"
 
                         output += "</tr>\n"
 
                 output += "<tr>\n<td></td>\n"
                 output += "<td class='stationControls'><button id='cResetNames'>" + (u'Reset Names') + "</button></td>\n"
-                output += "<td colspan='3' style='text-align:center' class='stationControls'><button id='cClearMaster' " + (" disabled" if gv.sd['mas']==0 else "") + ">" + (u'Clear Master') + "</button></td>\n"
+                output += "<td colspan='3' style='text-align:center' class='stationControls'><button id='cClearMaster' " + (" disabled" if not gv.sd['mas'] else "") + ">" + (u'Clear Master') + "</button></td>\n"
                 output += "</tr>\n"
                 
                 output += "</tbody>\n</table>\n</div>\n"
