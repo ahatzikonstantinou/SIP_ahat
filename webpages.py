@@ -493,8 +493,37 @@ class get_set_station(ProtectedPage):
                 gv.rs[sid][1] = gv.now + 1
                 if gv.sd["mas"]:
                     # gv.rs[gv.sd["mas"] - 1][1] = gv.now + 1
-                    for m in gv.sd["mas"]:
-                        gv.rs[m - 1][1] = gv.now + 1
+                    # Check if any other non-master station is still running and enables master operation
+                    active_non_masters = any(
+                        i != sid and
+                        (i + 1) not in gv.sd["mas"] and
+                        ((gv.sd["mo"][i // 8] >> (i % 8)) & 1) and
+                        gv.rs[i][1] > gv.now
+                        for i in range(gv.sd["nst"])
+                    )
+
+                    if not active_non_masters:
+                        # Schedule master stop with mtoff delay
+                        for m in gv.sd["mas"]:
+                            gv.rs[m - 1][0] = gv.now  # ← required for set_output() to work
+                            gv.rs[m - 1][1] = gv.now + gv.sd["mtoff"]
+
+                        # Clear sbits for masters
+                        for m in gv.sd["mas"]:
+                            sb_byte = (m - 1) // 8
+                            bit_pos = (m - 1) % 8
+                            gv.sbits[sb_byte] &= ~(1 << bit_pos)
+
+                        # Log master run if active
+                        for m in gv.sd["mas"]:
+                            if gv.srvals[m - 1]:
+                                gv.lrun[0] = m - 1
+                                gv.lrun[1] = gv.rs[m - 1][3]
+                                gv.lrun[2] = gv.now - gv.rs[m - 1][0]
+                                log_run()
+
+                        set_output()
+
                 time.sleep(1)
             raise web.seeother("/")
         else:
@@ -926,3 +955,8 @@ class rain_sensor_state(ProtectedPage):
         web.header("Content-Type", "application/json")
         return gv.sd["rs"]
          
+class get_srvals_json(ProtectedPage):
+    def GET(self):
+        import json
+        web.header('Content-Type', 'application/json')
+        return json.dumps(gv.srvals)

@@ -30,6 +30,7 @@ urls = [
     "/logout", "webpages.logout",
     "/restart", "webpages.sw_restart",
     "/rss", "webpages.rain_sensor_state",
-    "/refresh", "webpages.page_refresh"
+    "/refresh", "webpages.page_refresh",
+    "/api/srvals", "webpages.get_srvals_json"
     # fmt: on
 ]

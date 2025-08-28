@@ -141,6 +141,7 @@ def timing_loop():
                                 gv.lrun[2] = int(gv.now - gv.rs[sid][0])
                                 log_run()
                                 report_station_completed(sid + 1)
+                            print(f"Stopping station sid={sid}")
                             gv.rs[sid] = [0, 0, 0, 0]
                     else:  # if this station is not yet on
                         if (gv.now >= gv.rs[sid][0]
@@ -182,7 +183,7 @@ def timing_loop():
                                     for m in mas_ids:
                                         if gv.sd["mton"] > 0:
                                             gv.rs[m][0] = gv.rs[sid][0] + gv.sd["mton"] # this is where master is scheduled
-                                        gv.rs[m][1] = gv.rs[sid][1] + gv.sd["mtoff"]
+                                        gv.rs[m][1] = gv.rs[sid][1] + gv.sd["mtoff"]                                        
                                         gv.rs[m][3] = gv.rs[sid][3]
                             # elif sid == masid: # if this is master
                             elif sid in mas_ids:
@@ -232,7 +233,7 @@ def timing_loop():
                         sid = b * 8 + s
                         if (
                             # gv.sd["mas"] != sid + 1  # if not master
-                            (sid + 1) not in mas_ids
+                            sid not in mas_ids
                             and gv.srvals[sid]  #  station is on
                             and gv.rs[sid][1]
                             >= gv.now  #  station has a stop time >= now
@@ -240,6 +241,7 @@ def timing_loop():
                         ):
                             # gv.rs[gv.sd["mas"] - 1][1] = (gv.rs[sid][1] + gv.sd["mtoff"])  # set to future...
                             for m in mas_ids:
+                                #print(f"For sid={sid} (gv.srvals[sid]={gv.srvals[sid]}, gv.rs[sid][1]={gv.rs[sid][1]}, gv.now={gv.now}), increasing master {m} stop time in bsy if master is defined from {gv.rs[m][1]} to {(gv.rs[sid][1] + gv.sd['mtoff'])}")
                                 gv.rs[m][1] = (gv.rs[sid][1] + gv.sd["mtoff"])  # set to future...
 
                             break  # first found will do

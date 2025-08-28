@@ -42,6 +42,16 @@ $code:
         return '%.0f' % result
 
 <script>
+    // Serialize gv.sd to JSON and assign to a JS variable
+    const gv_sd = $:{json.dumps(gv.sd, ensure_ascii=False)};
+    const gv_rs = $:{json.dumps(gv.rs, ensure_ascii=False)};
+    const gv_now = $:{json.dumps(gv.now, ensure_ascii=False)};
+
+    // Optional: log to console for inspection
+    console.log(gv_now);
+    console.log(gv_sd);
+    console.log(gv_rs);
+
     let priorRs = ${gv.sd["rs"]};
     let useRainsense = ${gv.sd["urs"]};
     let pluginStn = $:{json.dumps(gv.pluginStn, ensure_ascii=False)};
@@ -150,6 +160,37 @@ $code:
     }
     
     let restarted = ${gv.restarted};
+
+    const masterStations = ${json.dumps(gv.sd["mas"])}; // e.g. [1, 2, 3]
+
+    function updateMasterStatus(srvals) {
+        masterStations.forEach(function(stationNum) {
+            const sid = stationNum - 1;
+            const cell = document.querySelector(`td.master[data-sid='$${sid}']`);
+            if (!cell) return;
+
+            if (srvals[sid] === 1) {
+                cell.classList.remove("station_off");
+                cell.classList.add("station_on");
+                cell.textContent = "On (Master)";
+            } else {
+                cell.classList.remove("station_on");
+                cell.classList.add("station_off");
+                cell.textContent = "Off (Master)";
+            }
+        });
+    }
+
+    function pollSrvals() {
+        fetch("/api/srvals")
+            .then(response => response.json())
+            .then(data => updateMasterStatus(data))
+            .catch(err => console.error("Polling error:", err));
+    }
+
+    // Poll every 2 seconds
+    setInterval(pollSrvals, 2000);
+
     
     // Initialize behaviors
     jQuery(document).ready(function(){
@@ -295,7 +336,6 @@ $if gv.sd['mm']:
             <script>
                 // Convert Python lists to JSON and assign to JS variables
                 const srvals = ${json.dumps(gv.srvals)};
-                const masterStations = ${json.dumps(gv.sd['mas'])};
 
                 // Optional: log them to console for inspection
                 console.log("Shift register values:", srvals);
@@ -316,9 +356,9 @@ $if gv.sd['mm']:
                         <td class='station_name'>${snames[sid]}</td>
                         $if (sid + 1) in gv.sd['mas']:
                             $if revals[sid]:
-                                <td class="master station_on">$_('On (Master)')</td>
+                                <td class="master station_on" data-sid="${sid}">$_('On (Master)')</td>
                             $else:
-                                <td class="master station_off">$_('Off (Master)')</td>   
+                                <td class="master station_off" data-sid="${sid}">$_('Off (Master)')</td>   
                         $else:
                             $ rem = gv.ps[sid][1]
                             $if rem > 65536:
