@@ -186,7 +186,7 @@ def timing_loop():
                                         gv.rs[m][1] = gv.rs[sid][1] + gv.sd["mtoff"]                                        
                                         gv.rs[m][3] = gv.rs[sid][3]
                             # elif sid == masid: # if this is master
-                            elif sid in mas_ids:
+                            elif sid in mas_ids and not gv.master_blocked[sid]:
                                 gv.sbits[b] |= 1 << s
                                 gv.srvals[sid] = 1  # this is where master is turned on
                                 set_output()

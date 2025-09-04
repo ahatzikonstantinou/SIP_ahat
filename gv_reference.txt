@@ -19,7 +19,7 @@ htip        "::"        IP address to bind to for the HTTP server
 htp         80          port to bind to for the HTTP server
 idd         0           individual run durations, used in schedule programs (boolean)
 loc         ""          location, (for e.g. weather plugin) - not used by core program
-mas         0           master station number (index + 1)
+mas         []          list of master station numbers (index + 1)
 mtoff       0           master off delay (seconds)
 mton        0           master on delay (seconds)
 nbrd        1           number of boards (includes base unit and expansion octets/boards)
