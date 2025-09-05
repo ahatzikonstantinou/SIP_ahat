@@ -959,4 +959,8 @@ class get_srvals_json(ProtectedPage):
     def GET(self):
         import json
         web.header('Content-Type', 'application/json')
-        return json.dumps(gv.srvals)
+        # return json.dumps(gv.srvals)
+        return json.dumps({
+            "srvals": gv.srvals,
+            "master_blocked": gv.master_blocked
+        })

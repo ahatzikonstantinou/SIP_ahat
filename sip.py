@@ -191,6 +191,25 @@ def timing_loop():
                                 gv.srvals[sid] = 1  # this is where master is turned on
                                 set_output()
 
+            # stop blocked master stations who are still on
+            # Collect all blocked master stations first
+            blocked_sids = [
+                sid for sid in mas_ids
+                if gv.srvals[sid] and sid in gv.master_blocked and gv.master_blocked[sid]
+            ]
+
+            # Deactivate them
+            for sid in mas_ids:
+                print(f"Checking sid={sid}, srval={gv.srvals[sid]}, blocked={gv.master_blocked[sid]}")
+                if gv.srvals[sid] and gv.master_blocked[sid]:
+                    gv.srvals[sid] = 0
+                    gv.sbits[b] &= ~(1 << s)
+                    print(f"Stopping blocked master station sid={sid}")
+                    gv.rs[sid] = [0, 0, 0, 0]
+            set_output()
+
+
+
             program_running = False
             pon = None
             for sid in range(gv.sd["nst"]):

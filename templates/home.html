@@ -162,8 +162,11 @@ $code:
     let restarted = ${gv.restarted};
 
     const masterStations = ${json.dumps(gv.sd["mas"])}; // e.g. [1, 2, 3]
+    const master_blocked = ${json.dumps(gv.master_blocked)};
 
-    function updateMasterStatus(srvals) {
+    function updateMasterStatus(data) {
+        var srvals = data.srvals;
+        var master_blocked = data.master_blocked;
         masterStations.forEach(function(stationNum) {
             const sid = stationNum - 1;
             const cell = document.querySelector(`td.master[data-sid='$${sid}']`);
@@ -176,7 +179,12 @@ $code:
             } else {
                 cell.classList.remove("station_on");
                 cell.classList.add("station_off");
-                cell.textContent = "Off (Master)";
+                // if this master station is blocked and there are active non-master stations
+                // the master station will be marked "Blocked", else it will be marked "Off"
+                cell.textContent = master_blocked[sid] 
+                    && (srvals.some((val, index) => !masterStations.includes(index + 1) && val === 1))
+                ? "Blocked (Master)"
+                : "Off (Master)";
             }
         });
     }
