@@ -325,7 +325,7 @@ def set_output():
     """
     Activate pins according to gv.srvals.
     """
-    print(f"set_output() starting")
+    # print(f"set_output() starting")
     with gv.output_srvals_lock:
         gv.output_srvals = gv.srvals
         if gv.sd["alr"]:
@@ -339,6 +339,6 @@ def set_output():
             setShiftRegister(gv.output_srvals)  # gv.srvals stores shift register state
             enableShiftRegisterOutput()
 
-        print(f"Sending zone_change signal")
+        # print(f"Sending zone_change signal")
         zone_change.send()
-    print(f"set_output() finished")
+    # print(f"set_output() finished")

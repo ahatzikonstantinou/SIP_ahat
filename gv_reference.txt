@@ -70,7 +70,7 @@ Read + write:
 ===========
 gv.bsy                  SIP is busy, stations are running
 gv.lrun      [4]        last run, used to add data to log file (list: [station index, program number, duration, end time]). Length = 4
-gv.node_runs            Dictionary of stations being controlled by node-red. 
+gv.node_runs            Dictionary of stations being controlled by node-red. alr
 gv.now                  Current time as seconds since the epoch, in UTC. Updated once per second.
 gv.pd        [P]        program data - loaded from file at startup (list of dicts). Length = number of programs.
 gv.pluginStn            Used to display plugin data next to station time countdown on home page timeline.
@@ -87,6 +87,7 @@ gv.srvals    [S]        shift register values, used to turn zones on or off (lis
 gv.tz_offset            time zone offset of local device from UTC.
 gv.use_pigpio           set to 1 if pigpio library is installed (boolean).
 gv.use_gpio_pins        Controls SIP's use of GPIO pins, default = True, Set = False to disable.
+gv.master_blocked [B]   array of booleans that represents if a master station is blocked. Index is sid
 
 Read only (status info):
 ========================

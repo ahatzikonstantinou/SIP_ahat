@@ -167,6 +167,8 @@ $code:
     function updateMasterStatus(data) {
         var srvals = data.srvals;
         var master_blocked = data.master_blocked;
+        // console.log("master_blocked:", master_blocked);
+
         masterStations.forEach(function(stationNum) {
             const sid = stationNum - 1;
             const cell = document.querySelector(`td.master[data-sid='$${sid}']`);
@@ -366,7 +368,7 @@ $if gv.sd['mm']:
                             $if revals[sid]:
                                 <td class="master station_on" data-sid="${sid}">$_('On (Master)')</td>
                             $else:
-                                <td class="master station_off" data-sid="${sid}">$_('Off (Master)')</td>   
+                                <td class="master station_off" data-sid="${sid}">$_('Off (Master)')</td>
                         $else:
                             $ rem = gv.ps[sid][1]
                             $if rem > 65536:
@@ -420,6 +422,7 @@ $else:
                 <td class="scheduleTick scheduleHeader">${'22:00' if tf else '10 PM'}</td>
                 <td class="scheduleTick scheduleHeader">${'23:00' if tf else '11 PM'}</td>
             </tr>
+            $ revals = gv.srvals
             $ odd = 1
             $for bid in range(0, gv.sd['nbrd']):
                 $for s in range(0,8):
@@ -429,7 +432,14 @@ $else:
                     $if show == 1:
                         <tr class="stationSchedule ${'odd' if odd else 'even'}" id='schedule${sid}' data="${sid}">
                             <td class='station_name'>${snames[sid]}</td>
-                            <td id='status${sid}' class="stationStatus">$_('loading...')</td>
+                             $if (sid + 1) in gv.sd['mas']:
+                                $if revals[sid]:
+                                    <td class="master station_on" data-sid="${sid}">$_('On (Master)')</td>
+                                $else:
+                                    <td class="master station_off" data-sid="${sid}">$_('Off (Master)')</td>
+                            $else:
+                                <td id='status${sid}' class="stationStatus">$_('loading...')</td>
+
                             <td class="scheduleTick" data="0"></td>
                             <td class="scheduleTick" data="1"></td>
                             <td class="scheduleTick" data="2"></td>

@@ -198,9 +198,9 @@ def timing_loop():
                 if gv.srvals[sid] and sid in gv.master_blocked and gv.master_blocked[sid]
             ]
 
-            # Deactivate them
+            # and deactivate them
             for sid in mas_ids:
-                print(f"Checking sid={sid}, srval={gv.srvals[sid]}, blocked={gv.master_blocked[sid]}")
+                # print(f"Checking sid={sid}, srval={gv.srvals[sid]}, blocked={gv.master_blocked[sid]}")
                 if gv.srvals[sid] and gv.master_blocked[sid]:
                     gv.srvals[sid] = 0
                     gv.sbits[b] &= ~(1 << s)
@@ -233,6 +233,42 @@ def timing_loop():
                       # If station is on, decrement time remaining display
                         if gv.ps[sid][1] > 0:  # if time is left
                             gv.ps[sid][1] -= 1
+
+                # Re-activate master stations if they were previously blocked and are now unblocked
+                if gv.sd["mas"]:
+                    activate_masters = False
+                    station_stop_time = None
+                    station_duration = None
+                    for b in range(gv.sd["nbrd"]):
+                        for s in range(8):
+                            sid = b * 8 + s
+                            if (
+                                sid not in mas_ids
+                                and gv.srvals[sid]  # station is currently running
+                                and gv.sd["mo"][b] & (1 << s)  # station activates master
+                            ):
+                                activate_masters = True
+                                station_stop_time = gv.rs[sid][1]
+                                station_duration = gv.rs[sid][3]
+                                break
+                        if activate_masters:
+                            break
+                    
+                    if activate_masters:
+                        for m in mas_ids:
+                            if (
+                                not gv.master_blocked[m]  # master is now unblocked
+                                and not gv.srvals[m]  # master is currently off
+                            ):
+                                brd = m // 8
+                                gv.sbits[brd] |= 1 << (m - (brd * 8))  # turn on master
+                                gv.srvals[m] = 1
+                                gv.rs[m][1] = station_stop_time + gv.sd["mtoff"]
+                                gv.rs[m][3] = station_duration
+                                print(f"Re-activating master station sid={m} due to unblock")
+                        set_output()
+                        
+
 
             if not program_running:
                 gv.srvals = [0] * (gv.sd["nst"])
