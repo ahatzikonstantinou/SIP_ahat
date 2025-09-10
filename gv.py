@@ -83,7 +83,7 @@ sd = {
     "passphrase": "12d4e6fc471fbe073df5a0678fcffb9f75b12161e4e3f6d1e1bd81ffb22163bf",
     "lang": "default",
     "idd": 0,
-    "pigpio": 0,
+    "pigpio": 1,
     "alr": 0
 }
 
@@ -153,6 +153,10 @@ scount = (
     0
 )  # Station count, used in set station to track on stations with master association.
 use_gpio_pins = True
+
+# ahat. Do not use shift register in sip.set_output() unless an actual shift register 
+# is connected at the corresponding sr pins: pin_sr_dat, pin_sr_clk, pin_sr_lat, pin_sr_noe
+use_shift_register = False
 
 options = [
     [

@@ -17,7 +17,7 @@ After=syslog.target network.target network-online.target
 Wants=network-online.target
 
 [Service]
-Environment="PATH=${install_location}/.venv/bin:${PATH}"
+Environment="PATH=${install_location}/.venv/bin:${PATH}:PYTHONPATH=/opt/GPIO_server"
 ExecStart=${install_location}/.venv/bin/python3 -u ${install_location}/sip.py
 Restart=on-abort
 WorkingDirectory=${install_location}
