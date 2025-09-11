@@ -1,0 +1,17 @@
+#Service for SIP running on a SystemD service
+#
+#ahat: use systemctl to enable this service rather than sip_service.sh from Dan
+[Unit]
+Description=SIP for Python3
+After=syslog.target network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Environment=PATH=/opt/SIP/venv/bin:/opt/SIP:/usr/bin
+Environment=PYTHONPATH=/opt/GPIO_server
+ExecStart=/opt/SIP/venv/bin/python3 -u /opt/SIP/sip.py
+Restart=on-abort
+WorkingDirectory=/opt/SIP
+
+[Install]
+WantedBy=multi-user.target
